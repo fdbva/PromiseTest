@@ -71,7 +71,7 @@
       const yqlQuery = `select * from html where url='${parsedUrl}' and xpath='${xpath}'`;
       const encodedYqlQuery = encodeURIComponent(yqlQuery);
       const yqlQueryString = `https://query.yahooapis.com/v1/public/yql?q=${encodedYqlQuery}&format=json`;
-      const yql = 'http://query.yahooapis.com/v1/public/yql?'
+      const yql = 'https://query.yahooapis.com/v1/public/yql?'
         + 'q=' + encodeURIComponent(`select * from html where url=@url and xpath='${xpath}'`)
         + '&url=' + encodeURIComponent(parsedUrl)
         + '&crossProduct=optimized&format=json';
