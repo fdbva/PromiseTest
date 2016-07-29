@@ -5,27 +5,34 @@
 
   const inputTB = document.querySelector("#testInput");
   const button = document.querySelector("#testButton");
+  const resultsAnchor = document.querySelector('#resultsAnchor');
   const name = "a";
-
   button.addEventListener("click", function(){
       const parsedInput = parseUserInput(inputTB.value, supportedSites);
       const yqlStringLinks = yqlStringBuilder(parsedInput.href, parsedInput.xpathLinks);
-      
+      const yqlStringChapters = new Set();
       makeRequest('GET', yqlStringLinks)
       .then(function(data) {  
             console.log('Request ongoing - getting story');
             const numberOfChapters = (JSON.parse(data)).query.results.select[0].option.length;
             console.log(`Story has ${numberOfChapters} chapters`);
-            
-
-            console.log('TODO: loop to get all chapter contents.');
+            for(i=1;i<=3;i++){
+              //yqlStringChapters.add(yqlStringBuilder(parsedInput.hrefEmptyChapter+i, parsedInput.xpathStory, 'xml'));
+              makeRequest('GET', yqlStringBuilder(parsedInput.hrefEmptyChapter+i, parsedInput.xpathStory, 'xml'))
+              .then(function(data) {
+                resultsAnchor.insertAdjacentHTML('beforeend', `<div class="chapterBox">${data}</div>`);
+              }).catch(function(){
+                console.log('Request failed', error);  
+              });
+            }
+            //console.log('TODO: loop to get all chapter contents.');
             //build a list of chapters, and make a yqlStringBuilderALL and makeRequestAll?
             //button.insertAdjacentHTML("afterend", "<div>"+ syntaxHighlight(printTest) +"</div>");
         }).catch(function(error) {  
             console.log('Request failed', error);  
         });
       
-  })
+  });
   const supportedSites = new Map([
       ["www.fanfiction.net", 
         { xpathLinks: '//*[@id="chap_select"]',
@@ -35,7 +42,7 @@
             xpathStory: '//*[@id="storytext"]'}],
       ["www.fictionpress.com", 
         { xpathLinks: '//*[@id="chap_select"]',
-            xpath: '//*[@id="storytext"]',
+            xpathStory: '//*[@id="storytext"]',
             jsonNChapters: '.query.results.select[0].option.length'}],
       ["m.fictionpress.com", 
         { xpathLinks: '//*[@id="d_menu"]/div/form',
@@ -49,44 +56,45 @@
     }  
   }*/
   function parseUserInput(url, supSites){
+    if(!url){
+      console.log(`Couldn't find url to be parsed`);
+      return;
+    }
       const input = parseUrl(url);
-      if(supSites.has(input.hostname)){
-          input.xpathLinks = supSites.get(input.hostname).xpathLinks;
-          input.xpathStory = supSites.get(input.hostname).xpathStory;
-          console.log(`Site ${input.name} successfully detected`);
-          console.log(JSON.stringify(input, undefined, 2));
-          return input;
+      if(!supSites.has(input.hostname)){
+        console.log(`I'm sorry, '${inputTB.value}' not found in our supported sites list`);
+        return;
       }
-      else{
-          console.log(`I'm sorry, '${inputTB.value}' not found in our supported sites list`);
+      input.xpathLinks = supSites.get(input.hostname).xpathLinks;
+      input.xpathStory = supSites.get(input.hostname).xpathStory;
+      if(!input.xpathLinks || !input.xpathStory){
+        console.log(`parseUserInput input problem:
+                    xpathLinks: ${input.xpathLinks}
+                    xpathStory: ${input.xpathStory}`);
+        return;
       }
+      console.log(`Site ${input.name} successfully detected`);
+      console.log(JSON.stringify(input, undefined, 2));
+      return input;
   }
-  function yqlStringBuilder(parsedUrl, xpath){
+  function yqlStringBuilder(parsedUrl, xpath, format='json'){
       if(!parsedUrl || !xpath){
           console.log(`yqlStringBuilder input problem:
                        parsedUrl: ${parsedUrl}
                        xpath: ${xpath}`);
           return;
       }
-      const yqlQuery = `select * from html where url='${parsedUrl}' and xpath='${xpath}'`;
-      const encodedYqlQuery = encodeURIComponent(yqlQuery);
-      const yqlQueryString = `https://query.yahooapis.com/v1/public/yql?q=${encodedYqlQuery}&format=json`;
       const yql = 'https://query.yahooapis.com/v1/public/yql?'
         + 'q=' + encodeURIComponent(`select * from html where url=@url and xpath='${xpath}'`)
         + '&url=' + encodeURIComponent(parsedUrl)
-        + '&crossProduct=optimized&format=json';
+        + `&crossProduct=optimized&format=${format}`;
       
-      if(yql){
-          console.log(`yqlStringBuilder worked successfully 
-    href: ${parsedUrl}
-    xpath: ${xpath}`);
-          return yql;
-      }
-      else{
+      if(!yql){
           console.log('something went wrong while building yqlString:');
           console.log(`yqlQueryString: ${yql}
                        yqlQuery: ${yqlQuery}`);
       }
+      return yql;
   }
   
 function makeRequest (method, url) {
@@ -118,7 +126,14 @@ const parseUrl = (function () {
   const a = document.createElement('a');
   return function (url) {
     a.href = url;
-    nameArr = a.host.split('.')
+    hostArrDot = a.host.split('.');
+    hrefArrSlash = a.href.split('/');
+    if(!hostArrDot[0] || !hostArrDot[1]){
+      console.log(`There's a problem in the story link`);
+    }
+    if(!hrefArrSlash[4]){
+      console.log(`Story ID could not be parsed from link`);
+    }
     return {
       origin: a.origin,
       host: a.host,
@@ -131,7 +146,8 @@ const parseUrl = (function () {
       hash: a.hash,
       xpathLinks: '',
       xpathStory: '',
-      name: nameArr[0] == 'www' || nameArr[0] == 'm' ? nameArr[1] : nameArr[0]
+      name: hostArrDot[0] == 'www' || hostArrDot[0] == 'm' ? hostArrDot[1] : hostArrDot[0],
+      hrefEmptyChapter: a.origin + `/s/${hrefArrSlash[4]}/` 
     };
   }
 })();
