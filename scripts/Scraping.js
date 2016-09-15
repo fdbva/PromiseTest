@@ -17,7 +17,6 @@ scrapeButton.addEventListener("click", function(){
     makeRequest('GET', yqlStringLinks)
     .then(function(data) {  
           console.log('Request ongoing - getting story');
-          console.log("First RESULT: ", data);
           const numberOfChapters = (JSON.parse(data)).query.results.select[0].option.length;
           d = (JSON.parse(data));
           console.log(`Story has ${numberOfChapters} chapters`);
