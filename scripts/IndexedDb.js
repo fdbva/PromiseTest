@@ -73,6 +73,23 @@
         return request.result.Content;
     };
   }
+  //not working
+  function getStories(){
+    const objectStore = db.transaction(DB_STORE_NAME).objectStore(DB_STORE_NAME);
+    const storyMap = new Map();
+    objectStore.openCursor().onsuccess = function(event) {
+      const cursor = event.target.result;
+      if(cursor) {
+        if(!storyMap.has(cursor.value.StoryName)){
+          storyMap.set([cursor.value.ChapterId.split(".")[0], cursor.value.StoryName]);
+        }
+        cursor.continue();
+      } else {
+        console.log('Entries all displayed.');
+      }
+    };
+    return storyMap;
+  }
   /**
    * @param {IDBObjectStore=} store
    */

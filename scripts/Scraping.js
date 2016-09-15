@@ -24,8 +24,8 @@ scrapeButton.addEventListener("click", function(){
           for(i=1;i<=6;i++){//numberOfChapters;i++){
             makeRequest('GET', yqlStringBuilder(parsedInput.hrefEmptyChapter+i, parsedInput.xpathStory, 'xml'))
             .then(function(data) {
-              addOrReplaceStory(parsedInput.storyId+j, parsedInput.storyName, parsedInput.href, data);
-              getChapter(parsedInput.storyId+j);j++;
+              addOrReplaceStory(parsedInput.storyId+"."+j, parsedInput.storyName, parsedInput.href, data);
+              getChapter(parsedInput.storyId+"."+j);j++;
               //resultsAnchor.insertAdjacentHTML('beforeend', `<div class="chapterBox">${getChapter(parsedInput.storyId+j)}</div>`);
             }).catch(function(){
               console.log('Request failed', error);  
