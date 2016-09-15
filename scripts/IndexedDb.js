@@ -81,7 +81,7 @@
       const cursor = event.target.result;
       if(cursor) {
         if(!storyMap.has(cursor.value.StoryName)){
-          storyMap.set([cursor.value.ChapterId.split(".")[0], cursor.value.StoryName]);
+          storyMap.set(cursor.value.ChapterId.split(".")[0], cursor.value.StoryName);
         }
         cursor.continue();
       } else {
