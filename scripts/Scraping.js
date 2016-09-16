@@ -36,7 +36,7 @@ scrapeButton.addEventListener("click", function(){
       });
 });
 indexedDbShowButton.addEventListener("click", function(){
-    populateStoryArray(function (data){ //Raphael, passar o callback aqui para montar o menu lateral?
+    populateStoryArray(function (data){ //TODO: Raphael, passar o callback aqui para montar o menu lateral?
         // mas não em um click né, tem que fazer isso depois que a conexão com DB tiver aberto de fato.
         data.forEach(function(obj) {
           storyList.insertAdjacentHTML('beforeend', `<div class="chapterBox">${obj.StoryName}</div>`);

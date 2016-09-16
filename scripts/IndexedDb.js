@@ -67,8 +67,9 @@
     };
     request.onsuccess = function(event) {
       if(request.result){
-        const value = evt.target.result;
-          //Raphael, a logica de cada capítulo deve entrar aqui, essa é a estrutura básica
+        const value = event.target.result;
+          //TODO: Raphael, a logica de cada capítulo deve entrar aqui, essa é a estrutura básica
+          //pode transformar em callback, como em populateStoryArray
           storyList.insertAdjacentHTML('beforeend', `<div class="chapterBox">${value.Content}</div>`);
       }
     };
