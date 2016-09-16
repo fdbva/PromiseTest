@@ -21,10 +21,10 @@ scrapeButton.addEventListener("click", function(){
           d = (JSON.parse(data));
           console.log(`Story has ${numberOfChapters} chapters`);
           j=1;
-          for(i=1;i<=6;i++){//numberOfChapters;i++){
+          for(i=1;i<=numberOfChapters;i++){
             makeRequest('GET', yqlStringBuilder(parsedInput.hrefEmptyChapter+i, parsedInput.xpathStory, 'xml'))
             .then(function(data) {
-              addOrReplaceStory(parsedInput.storyId+"."+j, parsedInput.storyName, parsedInput.href, data);
+              addOrReplaceStory(parsedInput.storyId+"."+j, parsedInput.storyName, parsedInput.href, data, numberOfChapters);
               getChapter(parsedInput.storyId+"."+j);j++;
               //resultsAnchor.insertAdjacentHTML('beforeend', `<div class="chapterBox">${getChapter(parsedInput.storyId+j)}</div>`);
             }).catch(function(){
@@ -36,7 +36,13 @@ scrapeButton.addEventListener("click", function(){
       });
 });
 indexedDbShowButton.addEventListener("click", function(){
-    displayStoryList(getObjectStore(DB_STORE_NAME, 'readwrite'));
+    populateStoryArray(function (data){ //Raphael, passar o callback aqui para montar o menu lateral?
+        // mas não em um click né, tem que fazer isso depois que a conexão com DB tiver aberto de fato.
+        data.forEach(function(obj) {
+          storyList.insertAdjacentHTML('beforeend', `<div class="chapterBox">${obj.StoryName}</div>`);
+        });
+  });
+    //displayStoryList(getObjectStore(DB_STORE_NAME, 'readwrite'));
 });
 const supportedSites = new Map([
     ["www.fanfiction.net", 

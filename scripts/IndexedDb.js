@@ -3,8 +3,8 @@
 /*eslint prefer-const: "error"*/
 /*eslint-env es6*/
 
-  const DB_NAME = 'offwebreader2';
-  const DB_VERSION = 2; // Use a long long for this value (don't use a float)
+  const DB_NAME = 'offwebreader';
+  const DB_VERSION = 3; // Use a long long for this value (don't use a float)
   const DB_STORE_NAME = 'stories';
 
   let db;
@@ -47,7 +47,7 @@
     return tx.objectStore(store_name);
   }
 
-  function clearObjectStore(store_name) {
+  function clearObjectStore() {
     const store = getObjectStore(DB_STORE_NAME, 'readwrite');
     const req = store.clear();
     req.onsuccess = function(evt) {
@@ -66,14 +66,14 @@
       console.log("GetChapterError: ", request.error);
     };
     request.onsuccess = function(event) {
-      // Do something with the request.result!
-      
-      console.log("request.result: ", request);
-      if(request.result)
-        return request.result.Content;
+      if(request.result){
+        const value = evt.target.result;
+          //Raphael, a logica de cada capítulo deve entrar aqui, essa é a estrutura básica
+          storyList.insertAdjacentHTML('beforeend', `<div class="chapterBox">${value.Content}</div>`);
+      }
     };
   }
-  //not working
+  
   function getStories(){
     const objectStore = db.transaction(DB_STORE_NAME).objectStore(DB_STORE_NAME);
     const storyMap = new Map();
@@ -81,7 +81,7 @@
       const cursor = event.target.result;
       if(cursor) {
         if(!storyMap.has(cursor.value.StoryName)){
-          storyMap.set(cursor.value.ChapterId.split(".")[0], cursor.value.StoryName);
+          storyMap.set(cursor.value.ChapterId.split(".")[0]+"."+cursor.value.NumberOfChapters, cursor.value.StoryName);
         }
         cursor.continue();
       } else {
@@ -90,6 +90,47 @@
     };
     return storyMap;
   }
+  const callbackTest = function (data){
+
+          storyList.insertAdjacentHTML('beforeend', `<div class="chapterBox">${data.StoryName}</div>`);
+  }
+  function getStories(callback){
+    const objectStore = db.transaction(DB_STORE_NAME).objectStore(DB_STORE_NAME);
+    const storyMap = new Map();
+    objectStore.openCursor().onsuccess = function(event, callback) {
+      const cursor = event.target.result;
+      if(cursor) {
+        if(!storyMap.has(cursor.value.StoryName)){
+          callback(cursor.value);
+          storyMap.set(cursor.value.ChapterId.split(".")[0]+"."+cursor.value.NumberOfChapters, cursor.value.StoryName);
+        }
+        cursor.continue();
+      } else {
+        console.log('Entries all displayed.');
+      }
+    };
+    return storyMap;
+  }
+  function populateStoryArray(onCompleteCallbackFunction){
+    const transaction = db.transaction(DB_STORE_NAME);
+    const objectStore = transaction.objectStore(DB_STORE_NAME);
+    const myArray = [];
+    const storySet = new Set();
+    const request = objectStore.openCursor();
+    request.onsuccess = function() {
+      const cursor = this.result;
+      if(!cursor) return;
+      if(!storySet.has(cursor.value.StoryName)){
+        myArray.push(cursor.value);
+        storySet.add(cursor.value.StoryName);
+      }
+      cursor.continue();
+    };
+    transaction.oncomplete = function() {
+      onCompleteCallbackFunction(myArray);
+    };
+  }
+
   /**
    * @param {IDBObjectStore=} store
    */
@@ -152,8 +193,13 @@
   //   const store = getObjectStore(DB_STORE_NAME, 'readonly');
   // }
 
-  function addOrReplaceStory(chapterId, storyName, url, content) {
-    const obj = { "ChapterId": chapterId, "StoryName": storyName, "Url": url, "Content": content };
+  function addOrReplaceStory(chapterId, storyName, url, content, numberOfChapters) {
+    const obj = { 
+      "ChapterId": chapterId, 
+      "StoryName": storyName, 
+      "Url": url, 
+      "Content": content,  
+      "NumberOfChapters": numberOfChapters};
 
     const store = getObjectStore(DB_STORE_NAME, 'readwrite');
     let req;
